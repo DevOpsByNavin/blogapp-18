@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgres
+  name: postgres
+  namespace: blogapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - image: postgres:17-alpine
+        name: postgres
+        resources: {}
+        env:
+          - name: POSTGRES_USER
+            value: "postgres"
+          - name: POSTGRES_PASSWORD
+            value: "postgres"
+        ports:
+          - name: postgres
+            containerPort: 5432
+        volumeMounts:
+          - name: init-script
+            mountPath: /docker-entrypoint-initdb.d/init.d
+      volumes:
+        - name: init-script
+          configMap:
+            name: postgres-init
+        
+status: {}

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend2
+  namespace: blogapp
+  labels:
+    app: backend2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend2
+  template:
+    metadata:
+      labels:
+        app: backend2
+    spec:
+      containers:
+      - name: blogapp-backend2
+        image: duck69i/blogapp-backend2:latest
+        envFrom:
+          - configMapRef:
+              name: backend2-env
+        ports:
+          - name: http
+            containerPort: 3001

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: blogapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: duck69i/blogapp-nginx:latest
+        name: blogapp-nginx
+        resources: {}
+        ports:
+          - name: http
+            containerPort: 80
+status: {}
