@@ -6,8 +6,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: 13.232.45.191
-    http:
+  - http:
       paths:
       - backend:
           service:

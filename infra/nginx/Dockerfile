@@ -1,7 +1,7 @@
-FROM node:20-alpine As builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY services/frontend/package.json .
+COPY services/frontend/package.json ./
 RUN npm install --legacy-peer-deps
 COPY services/frontend .
 RUN npm run build
@@ -9,7 +9,6 @@ RUN npm run build
 
 FROM nginx:alpine
 
-WORKDIR /app
 COPY infra/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /app/dist /var/www/blog-app
 EXPOSE 80
