@@ -4,10 +4,10 @@ WORKDIR /app
 COPY services/frontend/package.json .
 RUN npm install --legacy-peer-deps
 COPY services/frontend .
-RUN npm run builder
+RUN npm run build
 
 
-FROM node:20-alpine
+FROM nginx:alpine
 
 WORKDIR /app
 COPY infra/nginx/nginx.conf /etc/nginx/nginx.conf

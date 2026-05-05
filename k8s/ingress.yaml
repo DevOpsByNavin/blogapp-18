@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: traefik
+  namespace: blogapp
 spec:
   ingressClassName: traefik
   rules:
@@ -14,6 +15,6 @@ spec:
             port:
               number: 80
         path: /
-        pathType: Exact
+        pathType: Prefix
 status:
   loadBalancer: {}

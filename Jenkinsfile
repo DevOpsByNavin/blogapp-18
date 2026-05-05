@@ -11,14 +11,14 @@ pipeline {
         stage("Image Tagging") {
             steps {
                 script {
-                    env.BACKEND1_IMG = "${DH_USERNAME}/blog-backend1:${BUILD_NUMBER}"
-                    env.BACKEND1_LATEST = "${DH_USERNAME}/blog-backend1:latest"
+                    env.BACKEND1_IMG = "${DH_USERNAME}/blogapp-backend1:${BUILD_NUMBER}"
+                    env.BACKEND1_LATEST = "${DH_USERNAME}/blogapp-backend1:latest"
 
-                    env.BACKEND2_IMG = "${DH_USERNAME}/blog-backend2:${BUILD_NUMBER}"
-                    env.BACKEND2_LATEST = "${DH_USERNAME}/blog-backend2:latest"
+                    env.BACKEND2_IMG = "${DH_USERNAME}/blogapp-backend2:${BUILD_NUMBER}"
+                    env.BACKEND2_LATEST = "${DH_USERNAME}/blogapp-backend2:latest"
 
-                    env.NGINX_IMG = "${DH_USERNAME}/blog-nginx:${BUILD_NUMBER}"
-                    env.NGINX_IMG = "${DH_USERNAME}/blog-nginx:latest"
+                    env.NGINX_IMG = "${DH_USERNAME}/blogapp-nginx:${BUILD_NUMBER}"
+                    env.NGINX_LATEST = "${DH_USERNAME}/blogapp-nginx:latest"
                 }
             }
         }
@@ -35,8 +35,8 @@ pipeline {
                         ]
                     ]],
                     configuration: [
-                        vaultUrl: 'https://vault.navin.codes',
-                        vaultCredentialId: 'jenkins-blogapp'
+                        vaultUrl='https://vault.navin.codes',
+                        vaultCredentialId='jenkins-blogapp'
                     ]
                 ]) {
                 sh '''
@@ -109,6 +109,7 @@ pipeline {
                     ]) {
                         sh '''
                             scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r k8s ${EC2_USER}@${EC2_HOST}:${EC2_WORKDIR}
+                            scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null infra/database/init.sql ${EC2_USER}@${EC2_HOST}:${EC2_WORKDIR}
 
                             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${EC2_USER}@${EC2_HOST} "
                             
@@ -133,7 +134,6 @@ pipeline {
                                 --from-literal=DB_USER=${DB_USER} \
                                 --from-literal=PORT=${B2_PORT} --dry-run=client -o yaml > k8s/backend2-configmap.yaml
 
-                                curl -o init.sql 'https://raw.githubusercontent.com/DevOpsByNavin/blogapp-17/refs/heads/main/infra/database/init.sql'
                                 kubectl create configmap postgres-init --from-file init.sql --dry-run=client -o yaml > k8s/postgres-configmap.yaml
 
                                 kubectl apply -f k8s/
