@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: postgres
@@ -10,7 +10,6 @@ spec:
   selector:
     matchLabels:
       app: postgres
-  strategy: {}
   template:
     metadata:
       labels:
@@ -19,7 +18,6 @@ spec:
       containers:
       - image: postgres:17-alpine
         name: postgres
-        resources: {}
         env:
           - name: POSTGRES_USER
             value: "postgres"
@@ -29,11 +27,19 @@ spec:
           - name: postgres
             containerPort: 5432
         volumeMounts:
+          - name: postgres-storage
+            mountPath: /var/lib/postgresql/data
           - name: init-script
-            mountPath: /docker-entrypoint-initdb.d/init.d
+            mountPath: /docker-entrypoint-initdb.d/
       volumes:
         - name: init-script
           configMap:
             name: postgres-init
-        
-status: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        ECS_USER = "ubuntu"
-        EC2_HOST = "65.0.89.162"
+        EC2_USER = "ubuntu"
+        EC2_HOST = "13.232.45.191"
         EC2_WORKDIR = "blogapp"
     }
 
@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     env.BACKEND1_IMG = "${DH_USERNAME}/blog-backend1:${BUILD_NUMBER}"
-                    env.BACKEND1_LATEST = "${DH_USERNAME}/blog-backend2:latest"
+                    env.BACKEND1_LATEST = "${DH_USERNAME}/blog-backend1:latest"
 
                     env.BACKEND2_IMG = "${DH_USERNAME}/blog-backend2:${BUILD_NUMBER}"
                     env.BACKEND2_LATEST = "${DH_USERNAME}/blog-backend2:latest"
@@ -40,11 +40,11 @@ pipeline {
                     ]
                 ]) {
                 sh '''
-                    docker build -t ${BACKEND1_IMG} -t ${BACKEND_LATEST} -f services/backend1/Dockerfile .
-                    docker build -t ${BACKEND2_IMG} -t ${BACKEND_LATEST} -f services/backend2/Dockerfile .
+                    docker build -t ${BACKEND1_IMG} -t ${BACKEND1_LATEST} -f services/backend1/Dockerfile .
+                    docker build -t ${BACKEND2_IMG} -t ${BACKEND2_LATEST} -f services/backend2/Dockerfile .
 
                     cat > services/frontend/.env <<EOF
-                    VITE_API_KEY: ${VITE_API_KEY}
+                    VITE_API_URL: ${VITE_API_URL}
                     VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
                     EOF
 
@@ -58,9 +58,9 @@ pipeline {
             steps{
                 withCredentials([usernamePassword(credentialId: 'dockerhub', usernameVariable: "DH_USER", passwordVariable: "DH_PASSWD")]) {
                     sh '''
-                        printf "%s" "${DH_PASSWD} | docker login -u ${DH_USERNAME} --password-stdin
+                        printf "%s" ${DH_PASSWD} | docker login -u ${DH_USERNAME} --password-stdin
 
-                        docker push ${BACEND1_IMG}
+                        docker push ${BACKEND1_IMG}
                         docker push ${BACKEND1_LATEST}
 
                         docker push ${BACKEND2_IMG}
@@ -111,6 +111,7 @@ pipeline {
                             scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r k8s ${EC2_USER}@${EC2_HOST}:${EC2_WORKDIR}
 
                             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${EC2_USER}@${EC2_HOST} "
+                            
                                 cd ${EC2_WORKDIR}
                                 kubectl create configmap backend1-env --from-literal=CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY} \
                                 --from-literal=CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \
@@ -132,8 +133,8 @@ pipeline {
                                 --from-literal=DB_USER=${DB_USER} \
                                 --from-literal=PORT=${B2_PORT} --dry-run=client -o yaml > k8s/backend2-configmap.yaml
 
-                                curl -o db-init.sql 'https://raw.githubusercontent.com/DevOpsByNavin/blogapp-18/refs/heads/main/infra/database/init.sql'
-                                kubectl create configmap postgres-init --from-file db-init.sql --dry-run -o yaml > k8s/postgres-configmap.yaml
+                                curl -o init.sql 'https://raw.githubusercontent.com/DevOpsByNavin/blogapp-17/refs/heads/main/infra/database/init.sql'
+                                kubectl create configmap postgres-init --from-file init.sql --dry-run=client -o yaml > k8s/postgres-configmap.yaml
 
                                 kubectl apply -f k8s/
                             "
